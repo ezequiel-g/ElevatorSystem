@@ -7,10 +7,10 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-public class BuildingsController {
+class BuildingsController {
 
     @GetMapping("/buildings")
-    public List<String> getBuildings() {
+    List<String> getBuildings() {
         return Collections.emptyList();
     }
 
