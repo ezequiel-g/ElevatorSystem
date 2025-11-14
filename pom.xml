@@ -12,7 +12,7 @@
 	<artifactId>ElevatorSystem</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>ElevatorSystem</name>
-	<description>Demo project for Spring Boot</description>
+    <description>Kindalab challenge, Elevator System</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+        <swagger.version>2.8.14</swagger.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -60,6 +61,11 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${swagger.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
