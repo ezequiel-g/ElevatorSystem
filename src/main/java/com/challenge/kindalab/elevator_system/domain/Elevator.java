@@ -1,5 +1,6 @@
 package com.challenge.kindalab.elevator_system.domain;
 
+import com.challenge.kindalab.elevator_system.handlers.ElevatorRequestHandler;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,23 +12,29 @@ import java.util.TreeMap;
 public class Elevator {
 
     int id;
-    ElevatorType type;
+    Type type;
     int weightLimit;
-    ElevatorCar elevatorCar;
+    Cabin cabin;
     @Builder.Default
-    NavigableMap<Integer, ElevatorRequest> elevatorRequests = new TreeMap<>();
+    Status status = Status.STOPPED;
+    @Builder.Default
+    NavigableMap<Integer, ElevatorRequestHandler.FloorCallRequest> elevatorRequests = new TreeMap<>();
     boolean stopEngine;
     boolean alarm;
 
-    public enum ElevatorType {
+    public enum Type {
         PUBLIC, FREIGHT
+    }
+
+    public enum Status {
+        STOPPED, MOVING_UP, MOVING_DOWN
     }
 
     @Builder
     @Data
-    public static class ElevatorCar {
+    public static class Cabin {
         int floorNumber;
-        int cargoWeight;
+        int weight;
     }
 
 }

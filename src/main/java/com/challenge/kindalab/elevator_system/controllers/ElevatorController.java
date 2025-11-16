@@ -43,8 +43,8 @@ public class ElevatorController {
         Floor floor = building.getFloors().get(floorNumber);
         Objects.requireNonNull(floor, "please check the provided floorNumber: " + floorNumber);
 
-        if (elevator.getElevatorCar().getFloorNumber() != floorNumber) {
-            throw new RuntimeException("do nothing, Elevator Car isn't on this floor yet.");
+        if (elevator.getCabin().getFloorNumber() != floorNumber) {
+            throw new RuntimeException("do nothing, Elevator Cabin isn't on this floor yet.");
         }
 
         elevatorRequestHandler.load(elevator, weight);
@@ -52,5 +52,22 @@ public class ElevatorController {
         return ResponseEntity.ok(elevator);
     }
 
+    @PutMapping("{id}/move")
+    ResponseEntity<Elevator> move(@PathVariable int id) {
+        Elevator elevator = building.getElevators().get(id);
+        Objects.requireNonNull(elevator, "please check the provided elevator id: " + id);
+        if (elevator.getElevatorRequests().isEmpty()) {
+            throw new RuntimeException("do nothing, there are not pending requests.");
+        }
+
+        elevatorRequestHandler.move(elevator);
+
+        return ResponseEntity.ok(elevator);
+    }
+
+    @PutMapping("{id}/destination/{floorNumber}?keycard=keycard1")
+    ResponseEntity<Elevator> destination(@PathVariable int id, @PathVariable int floorNumber, @RequestParam String keycard) {
+        throw new UnsupportedOperationException("destination action not implemented yet");
+    }
 
 }

@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.TreeMap;
 
 import static com.challenge.kindalab.elevator_system.domain.Elevator.ElevatorBuilder;
-import static com.challenge.kindalab.elevator_system.domain.Elevator.ElevatorType.PUBLIC;
+import static com.challenge.kindalab.elevator_system.domain.Elevator.Type.PUBLIC;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;

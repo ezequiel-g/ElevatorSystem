@@ -3,7 +3,7 @@ package com.challenge.kindalab.elevator_system.components;
 import com.challenge.kindalab.elevator_system.config.BuildingConfig;
 import com.challenge.kindalab.elevator_system.config.ElevatorConfig;
 import com.challenge.kindalab.elevator_system.domain.Building;
-import com.challenge.kindalab.elevator_system.domain.Elevator.ElevatorType;
+import com.challenge.kindalab.elevator_system.domain.Elevator.Type;
 import com.challenge.kindalab.elevator_system.domain.Floor;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +25,7 @@ class BuildingFactoryTest {
             .basementFloorsQuantity(basementFloorsQuantity)
             .regularFloorsQuantity(regularFloorsQuantity)
             .keycards(keycards)
-            .elevatorConfigs(Collections.singletonList(new ElevatorConfig(ElevatorType.PUBLIC, 1)));
+            .elevatorConfigs(Collections.singletonList(new ElevatorConfig(Type.PUBLIC, 1)));
     private final ElevatorFactory elevatorFactory = new ElevatorFactory();
     private final BuildingFactory factory = new BuildingFactory(configBuilder.build(), elevatorFactory);
 

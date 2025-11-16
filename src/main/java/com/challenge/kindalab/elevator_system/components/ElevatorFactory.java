@@ -19,7 +19,7 @@ public class ElevatorFactory {
                     .id(i)
                     .type(elevatorConfig.getType())
                     .weightLimit(elevatorConfig.getWeightLimit())
-                    .elevatorCar(Elevator.ElevatorCar.builder().floorNumber(0).cargoWeight(0).build())
+                    .cabin(Elevator.Cabin.builder().floorNumber(0).weight(0).build())
                     .build();
             elevators.add(elevator);
         }
