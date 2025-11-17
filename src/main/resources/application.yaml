@@ -10,8 +10,8 @@ building:
   basementFloorsQuantity: 1
   regularFloorsQuantity: 50
   keycards:
-    -1: _KEYCARD_-1
-    49: _KEYCARD_49
+    -1: 716a48c7-7b1d-4a5e-8b1d-c6d37d43ba9f
+    49: dc4e7ba5-376b-4964-a6a8-6b66f9498a45
   elevatorConfigs:
     - type: PUBLIC
       weightLimit: 1000

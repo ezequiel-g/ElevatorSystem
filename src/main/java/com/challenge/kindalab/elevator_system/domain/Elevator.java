@@ -18,7 +18,7 @@ public class Elevator {
     @Builder.Default
     Status status = Status.STOPPED;
     @Builder.Default
-    NavigableMap<Integer, ElevatorRequestHandler.FloorCallRequest> elevatorRequests = new TreeMap<>();
+    NavigableMap<Integer, ElevatorRequestHandler.FloorRequest> elevatorRequests = new TreeMap<>();
     boolean stopEngine;
     boolean alarm;
 

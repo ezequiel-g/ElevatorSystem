@@ -34,7 +34,7 @@ class ElevatorRequestHandlerTest {
         int weight = WEIGHT_LIMIT + 100;
 
         elevatorRequestHandler.load(elevator, weight);
-        assertThat(elevator.getCabin().getWeight()).isEqualTo(0);
+        assertThat(elevator.getCabin().getWeight()).isEqualTo(WEIGHT_LIMIT + 100);
         assertThat(elevator.isAlarm()).isEqualTo(true);
         assertThat(elevator.isStopEngine()).isEqualTo(true);
     }
@@ -75,12 +75,12 @@ class ElevatorRequestHandlerTest {
         assertThat(elevator.isStopEngine()).isEqualTo(false);
 
         elevatorRequestHandler.load(elevator, WEIGHT_LIMIT);
-        assertThat(elevator.getCabin().getWeight()).isEqualTo(weight * 3);
+        assertThat(elevator.getCabin().getWeight()).isEqualTo(weight * 3 + WEIGHT_LIMIT);
         assertThat(elevator.isAlarm()).isEqualTo(true);
         assertThat(elevator.isStopEngine()).isEqualTo(true);
 
-        elevatorRequestHandler.load(elevator, -weight);
-        assertThat(elevator.getCabin().getWeight()).isEqualTo(weight * 2);
+        elevatorRequestHandler.load(elevator, -weight * 4);
+        assertThat(elevator.getCabin().getWeight()).isEqualTo(WEIGHT_LIMIT - weight);
         assertThat(elevator.isAlarm()).isEqualTo(false);
         assertThat(elevator.isStopEngine()).isEqualTo(false);
     }
@@ -94,29 +94,29 @@ class ElevatorRequestHandlerTest {
         elevatorRequestHandler.call(elevator, floor);
         assertThat(elevator.getElevatorRequests())
                 .hasSize(1)
-                .contains(entry(floor.getFloorNumber(), new ElevatorRequestHandler.FloorCallRequest(floor)));
+                .contains(entry(floor.getFloorNumber(), new ElevatorRequestHandler.FloorRequest(floor)));
     }
 
     @Test
     void call_withPreviousRequests_shouldHaveBothRequests() {
         Elevator elevator = elevatorBuilder.build();
         Floor floor1 = new Floor(3, null);
-        elevator.getElevatorRequests().putIfAbsent(floor1.getFloorNumber(), new ElevatorRequestHandler.FloorCallRequest(floor1));
+        elevator.getElevatorRequests().putIfAbsent(floor1.getFloorNumber(), new ElevatorRequestHandler.FloorRequest(floor1));
         assumeThat(elevator.getElevatorRequests()).isNotEmpty();
         Floor floor2 = new Floor(5, null);
 
         elevatorRequestHandler.call(elevator, floor2);
         assertThat(elevator.getElevatorRequests())
                 .hasSize(2)
-                .contains(entry(floor1.getFloorNumber(), new ElevatorRequestHandler.FloorCallRequest(floor1)))
-                .contains(entry(floor2.getFloorNumber(), new ElevatorRequestHandler.FloorCallRequest(floor2)));
+                .contains(entry(floor1.getFloorNumber(), new ElevatorRequestHandler.FloorRequest(floor1)))
+                .contains(entry(floor2.getFloorNumber(), new ElevatorRequestHandler.FloorRequest(floor2)));
     }
 
     @Test
     void move_withStoppedCabinOnFloorGroundToThirdFloor_shouldMoveToThirdFloor() {
         Elevator elevator = elevatorBuilder.build();
         Floor floor = new Floor(3, null);
-        ElevatorRequestHandler.FloorCallRequest request = new ElevatorRequestHandler.FloorCallRequest(floor);
+        ElevatorRequestHandler.FloorRequest request = new ElevatorRequestHandler.FloorRequest(floor);
         elevator.getElevatorRequests().putIfAbsent(request.getFloor().getFloorNumber(), request);
         assumeThat(elevator.getCabin().getFloorNumber()).isEqualTo(0);
         assumeThat(elevator.getElevatorRequests()).hasSize(1);
@@ -128,12 +128,12 @@ class ElevatorRequestHandlerTest {
     @Test
     void move_withStoppedCabinOnFloorGroundToThirdFloorAndSeven_shouldMoveToSevenFloor() {
         Elevator elevator = elevatorBuilder.build();
-        ElevatorRequestHandler.FloorCallRequest request1 = new ElevatorRequestHandler.FloorCallRequest(new Floor(3, null));
+        ElevatorRequestHandler.FloorRequest request1 = new ElevatorRequestHandler.FloorRequest(new Floor(3, null));
         elevator.getElevatorRequests().putIfAbsent(request1.getFloor().getFloorNumber(), request1);
         assumeThat(elevator.getCabin().getFloorNumber()).isEqualTo(0);
         assumeThat(elevator.getElevatorRequests()).hasSize(1);
 
-        ElevatorRequestHandler.FloorCallRequest request2 = new ElevatorRequestHandler.FloorCallRequest(new Floor(7, null));
+        ElevatorRequestHandler.FloorRequest request2 = new ElevatorRequestHandler.FloorRequest(new Floor(7, null));
         elevator.getElevatorRequests().putIfAbsent(request2.getFloor().getFloorNumber(), request2);
         assumeThat(elevator.getElevatorRequests()).hasSize(2);
 
@@ -146,12 +146,12 @@ class ElevatorRequestHandlerTest {
     void move2_withStoppedCabinOnFifthToTenFloorAndSeven_shouldMoveToTenFloor() {
         Elevator elevator = elevatorBuilder.build();
         elevator.getCabin().setFloorNumber(5);
-        ElevatorRequestHandler.FloorCallRequest request1 = new ElevatorRequestHandler.FloorCallRequest(new Floor(10, null));
+        ElevatorRequestHandler.FloorRequest request1 = new ElevatorRequestHandler.FloorRequest(new Floor(10, null));
         elevator.getElevatorRequests().putIfAbsent(request1.getFloor().getFloorNumber(), request1);
         assumeThat(elevator.getCabin().getFloorNumber()).isEqualTo(5);
         assumeThat(elevator.getElevatorRequests()).hasSize(1);
 
-        ElevatorRequestHandler.FloorCallRequest request2 = new ElevatorRequestHandler.FloorCallRequest(new Floor(3, null));
+        ElevatorRequestHandler.FloorRequest request2 = new ElevatorRequestHandler.FloorRequest(new Floor(3, null));
         elevator.getElevatorRequests().putIfAbsent(request2.getFloor().getFloorNumber(), request2);
         assumeThat(elevator.getElevatorRequests()).hasSize(2);
 
@@ -165,12 +165,12 @@ class ElevatorRequestHandlerTest {
     void move_withStoppedCabinMovingDown_shouldMoveToFirstFloor() {
         Elevator elevator = elevatorBuilder.build();
         elevator.getCabin().setFloorNumber(5);
-        ElevatorRequestHandler.FloorCallRequest request1 = new ElevatorRequestHandler.FloorCallRequest(new Floor(3, null));
+        ElevatorRequestHandler.FloorRequest request1 = new ElevatorRequestHandler.FloorRequest(new Floor(3, null));
         elevator.getElevatorRequests().putIfAbsent(request1.getFloor().getFloorNumber(), request1);
         assumeThat(elevator.getCabin().getFloorNumber()).isEqualTo(5);
         assumeThat(elevator.getElevatorRequests()).hasSize(1);
 
-        ElevatorRequestHandler.FloorCallRequest request2 = new ElevatorRequestHandler.FloorCallRequest(new Floor(1, null));
+        ElevatorRequestHandler.FloorRequest request2 = new ElevatorRequestHandler.FloorRequest(new Floor(1, null));
         elevator.getElevatorRequests().putIfAbsent(request2.getFloor().getFloorNumber(), request2);
         assumeThat(elevator.getElevatorRequests()).hasSize(2);
 

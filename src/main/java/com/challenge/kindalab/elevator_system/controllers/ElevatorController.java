@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 @AllArgsConstructor
 @RequestMapping("elevators")
@@ -65,9 +67,28 @@ public class ElevatorController {
         return ResponseEntity.ok(elevator);
     }
 
-    @PutMapping("{id}/destination/{floorNumber}?keycard=keycard1")
-    ResponseEntity<Elevator> destination(@PathVariable int id, @PathVariable int floorNumber, @RequestParam String keycard) {
-        throw new UnsupportedOperationException("destination action not implemented yet");
+    @PutMapping("{id}/destination/{floorNumber}")
+    ResponseEntity<Elevator> destination(@PathVariable int id, @PathVariable int floorNumber, @RequestParam Optional<UUID> keycard) {
+        Elevator elevator = building.getElevators().get(id);
+        Objects.requireNonNull(elevator, "please check the provided elevator id: " + id);
+        Floor floor = building.getFloors().get(floorNumber);
+        Objects.requireNonNull(floor, "please check the provided floorNumber: " + floorNumber);
+
+        if (Elevator.Type.FREIGHT.equals(elevator.getType())) {
+            elevatorRequestHandler.call(elevator, floor);
+        } else {
+            if (Objects.isNull(floor.getKeycard())) {
+                elevatorRequestHandler.call(elevator, floor);
+            } else if (keycard.isEmpty()) {
+                throw new RuntimeException("keycard is required to reach the floor: " + floor.getFloorNumber());
+            } else if (UUID.fromString(floor.getKeycard()).equals(keycard.get())) {
+                elevatorRequestHandler.call(elevator, floor);
+            } else {
+                throw new RuntimeException("provided keycard does match, please check it: " + keycard.get());
+            }
+        }
+
+        return ResponseEntity.ok(elevator);
     }
 
 }

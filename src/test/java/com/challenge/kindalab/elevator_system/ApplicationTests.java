@@ -2,7 +2,6 @@ package com.challenge.kindalab.elevator_system;
 
 import com.challenge.kindalab.elevator_system.domain.Building;
 import com.challenge.kindalab.elevator_system.domain.Elevator;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -100,12 +99,11 @@ class ApplicationTests {
     }
 
     @Test
-    void call_fromThirdFloor_shouldIncludeAnElevatorRequest() {
+    void call_fromFourthFloor_shouldIncludeAnElevatorRequest() {
         Map<String, Object> urlVariables = Map.of("id", 0, "floorNumber", 3);
         ResponseEntity<Elevator> actual = restTemplate.exchange("/elevators/{id}/call/{floorNumber}", HttpMethod.PUT, HttpEntity.EMPTY, Elevator.class, urlVariables);
         assertThat(actual.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(actual.getBody().getElevatorRequests()).hasSize(1);
-        assertThat(actual.getBody().getElevatorRequests()).isEmpty();
     }
 
     @Test
@@ -115,21 +113,17 @@ class ApplicationTests {
         ResponseEntity<Elevator> actual = restTemplate.exchange("/elevators/{id}/call/{floorNumber}", HttpMethod.PUT, HttpEntity.EMPTY, Elevator.class, urlVariables);
         assertThat(actual.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(actual.getBody().getElevatorRequests()).hasSize(1);
-        assertThat(actual.getBody().getElevatorRequests()).isEmpty();
     }
 
     @Test
-    void move() {
-        Map<String, Object> urlVariables = Map.of("id", 0);
-        ResponseEntity<Elevator> actual = restTemplate.exchange("/elevators/{id}/move", HttpMethod.PUT, HttpEntity.EMPTY, Elevator.class, urlVariables);
+    void move_whenStoppedFromGroundFloorToThirdFloor_shouldSetCabinFloorToThird() {
+        Map<String, Object> callUrlVariables = Map.of("id", 0, "floorNumber", 3);
+        restTemplate.exchange("/elevators/{id}/call/{floorNumber}", HttpMethod.PUT, HttpEntity.EMPTY, Elevator.class, callUrlVariables);
+
+        Map<String, Object> moveUrlVariables = Map.of("id", 0);
+        ResponseEntity<Elevator> actual = restTemplate.exchange("/elevators/{id}/move", HttpMethod.PUT, HttpEntity.EMPTY, Elevator.class, moveUrlVariables);
         assertThat(actual.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(actual.getBody().getCabin().getFloorNumber()).isEqualTo(3);
-    }
-
-    @Disabled
-    @Test
-    void destination() {
-        // TODO
     }
 
 }
