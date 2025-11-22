@@ -91,7 +91,7 @@ public class ElevatorControllerTest {
     }
 
     @Test
-    void call_shouldAddAnElevatorRequest() throws Exception {
+    void call_whenValidData_shouldAddAnElevatorRequest() throws Exception {
         Elevator elevator = elevatorBuilder.build();
         given(mockBuilding.getElevators()).willReturn(Collections.singletonList(elevator));
         given(mockBuilding.getFloors()).willReturn(new TreeMap<>(Collections.singletonMap(floor3.getFloorNumber(), floor3)));
@@ -230,7 +230,7 @@ public class ElevatorControllerTest {
     }
 
     @Test
-    void destination2_whenNotCorrectKeyCardIsProvided_shouldThrownException() throws Exception {
+    void destination_whenNotCorrectKeyCardIsProvided_shouldThrownException() throws Exception {
         Elevator elevator = elevatorBuilder.build();
         given(mockBuilding.getElevators()).willReturn(Collections.singletonList(elevator));
         floor3.setKeycard(UUID.randomUUID().toString());
