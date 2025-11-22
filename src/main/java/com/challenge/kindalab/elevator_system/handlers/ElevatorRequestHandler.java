@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.SortedMap;
@@ -34,7 +36,7 @@ public class ElevatorRequestHandler {
 
     public void call(Elevator elevator, Floor floor) {
         if (elevator.getCabin().getFloorNumber() == floor.getFloorNumber()) {
-            throw new RuntimeException("do nothing, Elevator Cabin is on the same floor.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Discard call. Elevator Cabin is on the same floor: " + floor.getFloorNumber());
         }
         FloorRequest request = new FloorRequest(floor);
         elevator.getElevatorRequests().putIfAbsent(floor.getFloorNumber(), request);
@@ -43,11 +45,11 @@ public class ElevatorRequestHandler {
 
     public void move(Elevator elevator) {
         if (elevator.getElevatorRequests().isEmpty()) {
-            throw new RuntimeException(("do nothing, there are no pending requests"));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There are no pending requests for elevator id: " + elevator.getId());
         }
 
         if (elevator.isStopEngine()) {
-            throw new RuntimeException(("do nothing, Elevator Cabin weight limit exceed. Please, remove some weight"));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Elevator Cabin weight limit exceed. Please, remove some weight");
         }
 
         if (Elevator.Status.STOPPED.equals(elevator.getStatus())) {
@@ -69,9 +71,11 @@ public class ElevatorRequestHandler {
                 });
             }
             elevator.setStatus(Elevator.Status.STOPPED);
+        } else {
+            // TODO: figure out how to manage request while the Elevator Cabin is moving. So far, does not support 2 actions at the same time.
+            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Simulating handling request while elevator is moving not supported");
         }
 
-        // TODO: figure out how to manage request while the Elevator Cabin is moving. So far, does not support 2 actions at the same time.
     }
 
     @Builder

@@ -3,22 +3,22 @@ package com.challenge.kindalab.elevator_system.handlers;
 import com.challenge.kindalab.elevator_system.domain.Elevator;
 import com.challenge.kindalab.elevator_system.domain.Floor;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.server.ResponseStatusException;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 class ElevatorRequestHandlerTest {
 
     private static final int WEIGHT_LIMIT = 1000;
 
-    private final ElevatorRequestHandler elevatorRequestHandler = new ElevatorRequestHandler();
     private final Elevator.ElevatorBuilder elevatorBuilder = Elevator.builder()
             .weightLimit(WEIGHT_LIMIT)
             .cabin(Elevator.Cabin.builder().floorNumber(0).weight(0).build());
+    private final ElevatorRequestHandler elevatorRequestHandler = new ElevatorRequestHandler();
 
     @Test
-    void load_anEmptyElevator_shouldAddWeightCorrectly() {
+    void load_whenCabinIsEmpty_shouldAddWeightCorrectly() {
         Elevator elevator = elevatorBuilder.build();
         int weight = 0;
 
@@ -29,7 +29,7 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void load_tooMuchWeight_shouldEnableAlarmStopEngineAndWeightNoChange() {
+    void load_whenWeightLoadedExceedLimit_shouldEnableAlarmStopEngine() {
         Elevator elevator = elevatorBuilder.build();
         int weight = WEIGHT_LIMIT + 100;
 
@@ -40,7 +40,7 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void load_emptyElevatorWithNegativeWeight_shouldKeepValues() {
+    void load_whenNegativeWeightIsLoadedOnEmptyCabin_shouldSetWeight0() {
         Elevator elevator = elevatorBuilder.build();
         int weight = -1;
 
@@ -51,7 +51,7 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void load_anEmptyElevatorWithTwoWeights_shouldAddWeightCorrectly() {
+    void load_whenEmptyIsCabinLoadedTwice_shouldAddWeightCorrectly() {
         Elevator elevator = elevatorBuilder.build();
         int weight = 70;
 
@@ -63,7 +63,7 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void load_tooMuchWeightAndThenReduceLoad_shouldEnableAlarmStopEngineAndWeightNoChange() {
+    void load_whenAddingAndRemovingWeight_shouldChangeStatusCorrectly() {
         Elevator elevator = elevatorBuilder.build();
         int weight = 100;
 
@@ -86,7 +86,17 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void call_emptyRequests_shouldAddNewRequest() {
+    void call_whenCabinIsOnTheSameFloor_shouldThrownException() {
+        Elevator elevator = elevatorBuilder.build();
+        Floor floor = new Floor(0, null);
+        assumeThat(elevator.getCabin().getFloorNumber()).isEqualTo(floor.getFloorNumber());
+
+        assertThatThrownBy(() -> elevatorRequestHandler.call(elevator, floor)).isExactlyInstanceOf(ResponseStatusException.class)
+                .hasMessage("400 BAD_REQUEST \"Discard call. Elevator Cabin is on the same floor: %s\"", floor.getFloorNumber());
+    }
+
+    @Test
+    void call_whenRequestsIsEmpty_shouldAddNewRequest() {
         Elevator elevator = elevatorBuilder.build();
         assumeThat(elevator.getElevatorRequests()).isEmpty();
         Floor floor = new Floor(3, null);
@@ -98,7 +108,7 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void call_withPreviousRequests_shouldHaveBothRequests() {
+    void call_whenThereArePreviousRequests_shouldHaveBothRequests() {
         Elevator elevator = elevatorBuilder.build();
         Floor floor1 = new Floor(3, null);
         elevator.getElevatorRequests().putIfAbsent(floor1.getFloorNumber(), new ElevatorRequestHandler.FloorRequest(floor1));
@@ -113,7 +123,38 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void move_withStoppedCabinOnFloorGroundToThirdFloor_shouldMoveToThirdFloor() {
+    void move_whenRequestIsEmpty_shouldThrownException() {
+        Elevator elevator = elevatorBuilder.build();
+        assumeThat(elevator.getElevatorRequests()).isEmpty();
+
+        assertThatThrownBy(() -> elevatorRequestHandler.move(elevator)).isExactlyInstanceOf(ResponseStatusException.class)
+                .hasMessage("400 BAD_REQUEST \"There are no pending requests for elevator id: %s\"", elevator.getId());
+    }
+
+    @Test
+    void move_whenIsEngineStopped_shouldThrownException() {
+        Elevator elevator = elevatorBuilder.stopEngine(true).build();
+        Floor floor1 = new Floor(1, null);
+        elevator.getElevatorRequests().putIfAbsent(floor1.getFloorNumber(), new ElevatorRequestHandler.FloorRequest(floor1));
+        assumeThat(elevator.getElevatorRequests()).isNotEmpty();
+
+        assertThatThrownBy(() -> elevatorRequestHandler.move(elevator)).isExactlyInstanceOf(ResponseStatusException.class)
+                .hasMessage("400 BAD_REQUEST \"Elevator Cabin weight limit exceed. Please, remove some weight\"", elevator.getId());
+    }
+
+    @Test
+    void move_whenIsMoving_shouldThrownException() {
+        Elevator elevator = elevatorBuilder.status(Elevator.Status.MOVING_UP).build();
+        Floor floor1 = new Floor(1, null);
+        elevator.getElevatorRequests().putIfAbsent(floor1.getFloorNumber(), new ElevatorRequestHandler.FloorRequest(floor1));
+        assumeThat(elevator.getElevatorRequests()).isNotEmpty();
+
+        assertThatThrownBy(() -> elevatorRequestHandler.move(elevator)).isExactlyInstanceOf(ResponseStatusException.class)
+                .hasMessage("501 NOT_IMPLEMENTED \"Simulating handling request while elevator is moving not supported\"");
+    }
+
+    @Test
+    void move_whenCabinIsStoppedOnFloorGroundToThirdFloor_shouldMoveToThirdFloor() {
         Elevator elevator = elevatorBuilder.build();
         Floor floor = new Floor(3, null);
         ElevatorRequestHandler.FloorRequest request = new ElevatorRequestHandler.FloorRequest(floor);
@@ -126,7 +167,7 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void move_withStoppedCabinOnFloorGroundToThirdFloorAndSeven_shouldMoveToSevenFloor() {
+    void move_whenStoppedCabinOnFloorGroundToThirdFloorAndSeven_shouldMoveToSevenFloor() {
         Elevator elevator = elevatorBuilder.build();
         ElevatorRequestHandler.FloorRequest request1 = new ElevatorRequestHandler.FloorRequest(new Floor(3, null));
         elevator.getElevatorRequests().putIfAbsent(request1.getFloor().getFloorNumber(), request1);
@@ -143,7 +184,7 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void move2_withStoppedCabinOnFifthToTenFloorAndSeven_shouldMoveToTenFloor() {
+    void move_whenStoppedCabinOnFifthToTenFloorAndSeven_shouldMoveToTenFloor() {
         Elevator elevator = elevatorBuilder.build();
         elevator.getCabin().setFloorNumber(5);
         ElevatorRequestHandler.FloorRequest request1 = new ElevatorRequestHandler.FloorRequest(new Floor(10, null));
@@ -162,7 +203,7 @@ class ElevatorRequestHandlerTest {
     }
 
     @Test
-    void move_withStoppedCabinMovingDown_shouldMoveToFirstFloor() {
+    void move_whenStoppedCabinOnFifthFloorMovingDown_shouldMoveToFirstFloor() {
         Elevator elevator = elevatorBuilder.build();
         elevator.getCabin().setFloorNumber(5);
         ElevatorRequestHandler.FloorRequest request1 = new ElevatorRequestHandler.FloorRequest(new Floor(3, null));
